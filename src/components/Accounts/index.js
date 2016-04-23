@@ -28,6 +28,7 @@ export default class Accounts extends React.Component {
         loading: false,
         data: {}
       },
+      accounts: [],
       account: {
         id: undefined,
         name: '',
@@ -44,7 +45,7 @@ export default class Accounts extends React.Component {
   componentWillMount() {
 
     // Retrieve inital data
-    this.retrieveAccount().then(() => {
+    this.retrieveAccounts().then(() => {
       this.retrieveBalance();
       this.retrieveTransactions();
     });
@@ -70,8 +71,9 @@ export default class Accounts extends React.Component {
       || 'Internal error, check your network connection, contact me in the menu if this keeps happening', 'error'));
   }
 
-  // Updates the state with the account name (only first account supported atm)
-  retrieveAccount() {
+  // Updates the state with the accounts and the first account found is set as
+  // the selected account
+  retrieveAccounts() {
     return new Promise(resolve => {
       $.ajax({
         url: 'https://api.getmondo.co.uk/accounts',
@@ -81,6 +83,7 @@ export default class Accounts extends React.Component {
       })
       .done(response => {
         this.setState({
+          accounts: response.accounts,
           account: Object.assign({}, this.state.account, {
             name: response.accounts[0].description,
             id: response.accounts[0].id
