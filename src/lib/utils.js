@@ -25,15 +25,3 @@ export function intToAmount(amount, currency = 'GBP') {
 
   return `${addition ? '+ ' : ''}${currencySymbol}${formattedAmount}`;
 }
-
-// From Underscore.js - saves importing the whole lib!
-export function once(func) {
-  let ran = false, memo;
-  return function() {
-    if (ran) return memo;
-    ran = true;
-    memo = func.apply(this, arguments);
-    func = null;
-    return memo;
-  };
-};

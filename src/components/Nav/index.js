@@ -1,6 +1,6 @@
 import React from 'react';
 import Nav from 'components/Nav';
-import { once } from 'lib/utils';
+import { once } from 'underscore';
 import './style.scss';
 
 const logout = () => {

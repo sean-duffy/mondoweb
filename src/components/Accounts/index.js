@@ -3,8 +3,9 @@ import Container from 'components/Container';
 import Overview from 'components/Accounts/Overview';
 import Transactions from 'components/Accounts/Transactions';
 import TransactionOverview from 'components/Accounts/Transactions/Transaction/Overview';
-import { intToAmount, once } from 'lib/utils';
+import { intToAmount } from 'lib/utils';
 import localForage from 'localforage';
+import { once, debounce, compose, clone } from 'underscore';
 
 export default class Accounts extends React.Component {
 
@@ -17,6 +18,9 @@ export default class Accounts extends React.Component {
     // Bind property functions
     this.transactionSearch = this.transactionSearch.bind(this);
     this.transactionSelect = this.transactionSelect.bind(this);
+
+    // Debounce search function
+    this.transactionSearch = compose(debounce(this.transactionSearch, 500), clone);
 
     // TODO Add Redux
     this.state = {
@@ -185,23 +189,31 @@ export default class Accounts extends React.Component {
       });
     }
 
-    // TODO Move to search all trans (fetch) when pagination is implemented
-    let transactions = this.state.account.transactions;
+    $.ajax({
+      url: `https://api.getmondo.co.uk/transactions?expand[]=merchant&account_id=${this.state.account.id}`,
+      headers: {
+        'Authorization': `Bearer ${localStorage.mondo_access_token}`
+      }
+    })
+    .done(response => {
 
-    // Search merchant name, address category and notes
-    transactions = transactions.filter(transaction => (
-      (transaction.merchant ? transaction.merchant.name.toLowerCase().includes(search.toLowerCase()) : false) ||
-      (transaction.merchant ? transaction.merchant.address.formatted.toLowerCase().includes(search.toLowerCase()) : false) ||
-      (transaction.merchant ? transaction.merchant.category.toLowerCase().includes(search.toLowerCase()) : false) ||
-      (transaction.notes ? transaction.notes.toLowerCase().includes(search.toLowerCase()) : false)
-    ));
+      // Search merchant name, address category and notes
+      const transactions = response.transactions.filter(transaction => (
+        (transaction.merchant ? transaction.merchant.name.toLowerCase().includes(search.toLowerCase()) : false) ||
+        (transaction.merchant ? transaction.merchant.address.formatted.toLowerCase().includes(search.toLowerCase()) : false) ||
+        (transaction.merchant ? transaction.merchant.category.toLowerCase().includes(search.toLowerCase()) : false) ||
+        (transaction.notes ? transaction.notes.toLowerCase().includes(search.toLowerCase()) : false)
+      ));
 
-    this.setState({
-      account: Object.assign({}, this.state.account, {
-        filterActive: true,
-        filteredTransactions: transactions
-      })
-    });
+      this.setState({
+        account: Object.assign({}, this.state.account, {
+          filterActive: true,
+          filteredTransactions: transactions
+        })
+      });
+    })
+    .fail(err => swal('Error', err.responseJSON ? `${err.responseJSON.message} try logging out and in again` : false
+      || 'Internal error, check your network connection, contact me in the menu if this keeps happening', 'error'));
   }
 
   render() {
