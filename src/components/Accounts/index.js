@@ -163,11 +163,16 @@ export default class Accounts extends React.Component {
             logo: transaction.merchant ? transaction.merchant.logo : false,
             merchant: transaction.merchant ? transaction.merchant.name : transaction.is_load ? 'Mondo' : '',
             address: transaction.merchant ? transaction.merchant.address.short_formatted : 'In the clouds',
-            tags: transaction.merchant ? transaction.merchant.metadata.suggested_tags.split(' ') : [],
+            tags: transaction.merchant ? transaction.merchant.metadata.suggested_tags ? transaction.merchant.metadata.suggested_tags.split(' ') :[] : [],
             amount: intToAmount(transaction.amount, transaction.currency),
             online: transaction.merchant ? transaction.merchant.online : false,
             notes: transaction.notes,
-            created: transaction.created
+            created: transaction.created,
+            declined: transaction.decline_reason || false,
+            localAmount: transaction.local_currency !== this.state.account.currency ? (
+              intToAmount(transaction.local_amount, transaction.local_currency)
+            ) : false,
+            counterParty: transaction.counterparty ? transaction.counterparty.name : false
           }
         }
       });
@@ -243,6 +248,7 @@ export default class Accounts extends React.Component {
               transactionSelect={this.transactionSelect}
               transactions={account.filterActive ? account.filteredTransactions : account.transactions}
               active={ui.selectedTransaction}
+              accountCurrency={this.state.account.currency}
             />
           </div>
           <div className="col s12 m6 l4">

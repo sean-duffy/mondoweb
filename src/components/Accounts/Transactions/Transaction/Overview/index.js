@@ -4,9 +4,29 @@ import './style.scss';
 
 export default class Overview extends React.Component {
   render() {
-    const { props: { loading, empty, data: {
-      lat, long, zoom, logo, merchant, address, amount, tags, online, notes, created
-    } } } = this;
+    const {
+      props: {
+        loading,
+        empty,
+        data: {
+          lat,
+          long,
+          zoom,
+          logo,
+          merchant,
+          address,
+          amount,
+          tags,
+          online,
+          notes,
+          created,
+          declined,
+          localAmount,
+          counterParty
+        }
+      }
+    } = this;
+
     let tagKey = 0;
 
     return empty ? (
@@ -29,9 +49,10 @@ export default class Overview extends React.Component {
             )}
             <img src={logo || require('assets/shopping-bag.svg')} className="transaction--overview--logo rounded" />
           </div>
-          <h5 className="center">{merchant}</h5>
+          <h5 className="center">{counterParty || merchant}</h5>
           <div className="center"><a href={`http://maps.google.com/?ll=${lat},${long}`} target="_blank">{address}</a></div>
-          <h3 className="center">{amount}</h3>
+          <h3 className="center">{declined ? 'Declined' : amount}</h3>
+          {localAmount ? <p className="grey-text text-lighten-1 center">Local cost was {localAmount}</p> : ''}
           {notes ? <p className="grey-text text-lighten-1 center">{notes}</p> : ''}
           <div className="center">
             {tags.filter(tag => tag !== '').map(tag => (
