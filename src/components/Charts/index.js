@@ -13,31 +13,70 @@ export default class Charts extends React.Component {
     this.initSideMenu = once(this.initSideMenu);
 
     this.state = {
-      breakdownChartData: [
-        {
-          name: 'Microsoft Internet Explorer',
-          y: 56.33
-        }, {
-          name: 'Chrome',
-          y: 24.03,
-          sliced: true,
-          selected: true
-        }, {
-          name: 'Firefox',
-          y: 10.38
-        }, {
-          name: 'Safari',
-          y: 4.77
-        }, {
-          name: 'Opera',
-          y: 0.91
-        }, {
-          name: 'Proprietary or Undetectable',
-          y: 0.2
-        }
-      ]
+      account: {
+        id: undefined,
+        name: '',
+        transactions: [],
+        filterActive: false,
+        filteredTransactions: [],
+        balance: '',
+        currency: '',
+        spentToday: ''
+      }
     };
+  }
 
+  componentWillMount() {
+    // Retrieve inital data
+    this.retrieveAccount().then(() => {
+      this.retrieveTransactions().then(() => {
+        this.calculateBreakdown();
+      });
+    });
+  }
+
+  // Updates the state with the account name (only first account supported atm)
+  // This method is copied from components/Accounts, TODO: remove duplication
+  retrieveAccount() {
+    return new Promise(resolve => {
+      $.ajax({
+        url: 'https://api.getmondo.co.uk/accounts',
+        headers: {
+          'Authorization': `Bearer ${localStorage.mondo_access_token}`
+        }
+      })
+      .done(response => {
+        this.setState({
+          account: Object.assign({}, this.state.account, {
+            name: response.accounts[0].description,
+            id: response.accounts[0].id
+          })
+        });
+        resolve();
+      })
+      .fail(err => swal('Error', err.responseJSON ? `${err.responseJSON.message} try logging out and in again` : false
+        || 'Internal error, check your network connection, contact me in the menu if this keeps happening', 'error'));
+    });
+  }
+
+  // Params is a query string starting with '&'
+  // This method is copied from components/Accounts, TODO: remove duplication
+  retrieveTransactions(params = '') {
+    $.ajax({
+      url: `https://api.getmondo.co.uk/transactions?expand[]=merchant&account_id=${this.state.account.id}${params}`,
+      headers: {
+        'Authorization': `Bearer ${localStorage.mondo_access_token}`
+      }
+    })
+    .done(account => {
+      this.setState({
+        account: Object.assign({}, this.state.account, {
+          transactions: account.transactions
+        })
+      });
+    })
+    .fail(err => swal('Error', err.responseJSON ? `${err.responseJSON.message} try logging out and in again` : false
+      || 'Internal error, check your network connection, contact me in the menu if this keeps happening', 'error'));
   }
 
   render() {
@@ -46,7 +85,32 @@ export default class Charts extends React.Component {
       return false;
     }
 
-    const { breakdownChartData } = this.state;
+    var categoryTotals = new Map();
+    var totalSpend = 0;
+
+    // Get the total spent on each category
+    this.state.account.transactions.forEach(function(transaction) {
+      if (transaction.amount < 0) {
+        if (categoryTotals.has(transaction.category)) {
+          // Update the total amount and transform into positive pounds
+          categoryTotals.set(transaction.category, categoryTotals.get(transaction.category) + (transaction.amount * -1));
+        } else {
+          categoryTotals.set(transaction.category, (transaction.amount * -1));
+        }
+        totalSpend += transaction.amount * -1;
+      }
+    });
+
+    var breakdownChartData = [];
+
+    categoryTotals.forEach(function(total, category) {
+      breakdownChartData.push(
+        {
+          name: category,
+          y: total
+        }
+      );
+    });
 
     return (
       <Container>

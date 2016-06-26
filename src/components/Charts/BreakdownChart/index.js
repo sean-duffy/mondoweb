@@ -10,9 +10,7 @@ export default class BreakdownChart extends React.Component {
     this.chart = undefined;
   }
 
-  componentDidMount() {
-    const { props: { data } } = this;
-
+  render() {
     this.chart = $(ReactDOM.findDOMNode(this.refs.chart)).highcharts({
       chart: {
         plotBackgroundColor: null,
@@ -35,15 +33,13 @@ export default class BreakdownChart extends React.Component {
         }
       },
       series: [{
-        name: 'Brands',
+        name: 'Categories',
         data: this.props.data,
         colorByPoint: true,
       }],
       credits: false
     });
-  }
 
-  render() {
     return (
       <div ref="chart"></div>
     )
