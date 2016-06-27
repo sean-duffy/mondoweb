@@ -1,6 +1,7 @@
 import React from 'react';
 import Container from 'components/Container';
 import BreakdownChart from 'components/Charts/BreakdownChart';
+import TopMerchants from 'components/Charts/TopMerchants';
 import { intToAmount, once } from 'lib/utils';
 import './style.scss';
 
@@ -112,6 +113,37 @@ export default class Charts extends React.Component {
       );
     });
 
+    // Get the top merchants
+    var merchantTotals = new Map();
+    var merchantList = [];
+    var nOfMerchants = 10;
+    var local_currency;
+
+    this.state.account.transactions.forEach(function(transaction) {
+      if (transaction.amount < 0 && transaction.merchant) {
+        if (merchantTotals.has(transaction.merchant.name)) {
+          merchantTotals.set(transaction.merchant.name, merchantTotals.get(transaction.merchant.name) + (transaction.amount));
+        } else {
+          merchantTotals.set(transaction.merchant.name, (transaction.amount));
+        }
+      }
+      local_currency = transaction.local_currency;
+    });
+
+    merchantTotals.forEach(function(total, name) {
+      merchantList.push({
+        name: name,
+        total: intToAmount(total, local_currency),
+        int_total: total
+      });
+    });
+
+    merchantList = merchantList.sort(function(a, b) {
+      return (a.int_total === b.int_total ? 0 : (a.int_total < b.int_total ? -1 : 1));
+    });
+
+    merchantList = merchantList.slice(0, nOfMerchants);
+
     return (
       <Container>
         <div className="row">
@@ -123,6 +155,15 @@ export default class Charts extends React.Component {
                 />
             </div>
           </div>
+          <div className="col s12 m12 l3">
+            <div className="border-box">
+              <h4>Top Merchants</h4>
+                <TopMerchants
+                  merchants={merchantList}
+                />
+            </div>
+          </div>
+
         </div>
       </Container>
     );
