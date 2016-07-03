@@ -101,7 +101,10 @@ export default class Charts extends React.Component {
     categoryTotals.forEach(function(total, category) {
       breakdownChartData.push(
         {
-          name: category,
+          // Capitalise first letter, replace underscore with space
+          name: category.replace(/([A-Za-z])([A-Za-z]*)(_)?([A-Za-z]*)/, function(full, first, a, _, b) {
+                  return first.toUpperCase() + a + ' ' + b;
+                }),
           y: total
         }
       );
