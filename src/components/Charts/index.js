@@ -31,7 +31,6 @@ export default class Charts extends React.Component {
     // Retrieve inital data
     this.retrieveAccount().then(() => {
       this.retrieveTransactions().then(() => {
-        this.calculateBreakdown();
       });
     });
   }
