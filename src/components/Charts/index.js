@@ -79,12 +79,7 @@ export default class Charts extends React.Component {
       || 'Internal error, check your network connection, contact me in the menu if this keeps happening', 'error'));
   }
 
-  render() {
-    if (!localStorage.mondo_access_token) {
-      window.location.href = '/';
-      return false;
-    }
-
+  calculateSpendingBreakdown() {
     var categoryTotals = new Map();
     var totalSpend = 0;
 
@@ -111,6 +106,17 @@ export default class Charts extends React.Component {
         }
       );
     });
+
+    return breakdownChartData;
+  }
+
+  render() {
+    if (!localStorage.mondo_access_token) {
+      window.location.href = '/';
+      return false;
+    }
+
+    var breakdownChartData = this.calculateSpendingBreakdown();
 
     // Get the top merchants
     var merchantTotals = new Map();
